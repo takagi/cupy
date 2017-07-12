@@ -773,10 +773,8 @@ cdef class ndarray:
 
         data = cupy.ascontiguousarray(self)
 
-        # Assuming that Py_ssize_t can be represented with numpy.int64.
-        assert cython.sizeof(Py_ssize_t) == 8
 
-        idx_array = ndarray(self.shape, dtype=numpy.int64)
+        idx_array = ndarray(self.shape, dtype=numpy.intp)
 
         thrust.argsort(
             self.dtype, idx_array.data.ptr, data.data.ptr, self._shape)
