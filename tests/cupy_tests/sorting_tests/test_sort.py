@@ -178,8 +178,14 @@ class TestArgsort(unittest.TestCase):
 
     # Misc tests
 
-    def test_argsort_original_array_not_modified(self):
+    def test_argsort_original_array_not_modified_one_dim(self):
         a = testing.shaped_random((10,), cupy)
+        b = cupy.array(a)
+        self.argsort(a)
+        testing.assert_allclose(a, b)
+
+    def test_argsort_original_array_not_modified_multi_dim(self):
+        a = testing.shaped_random((2, 3, 3), cupy)
         b = cupy.array(a)
         self.argsort(a)
         testing.assert_allclose(a, b)
