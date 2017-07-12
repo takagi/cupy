@@ -176,6 +176,33 @@ class TestArgsort(unittest.TestCase):
         with self.assertRaises(NotImplementedError):
             return self.argsort(a)
 
+    # Test axis
+
+    @testing.numpy_cupy_array_equal()
+    def test_argsort_axis(self, xp):
+        a = testing.shaped_random((2, 3, 3), xp)
+        return self.argsort(a, axis=0)
+
+    @testing.numpy_cupy_array_equal()
+    def test_argsort_negative_axis(self, xp):
+        a = testing.shaped_random((2, 3, 3), xp)
+        return self.argsort(a, axis=2)
+
+    @testing.numpy_cupy_array_equal()
+    def test_argsort_none_axis(self, xp):
+        a = testing.shaped_random((2, 3, 3), xp)
+        return self.argsort(a, axis=None)
+
+    @testing.numpy_cupy_raises()
+    def test_argsort_invalid_axis(self, xp):
+        a = testing.shaped_random((2, 3, 3), xp)
+        return self.argsort(a, axis=3)
+
+    @testing.numpy_cupy_raises()
+    def test_argsort_invalid_negative_axis(self, xp):
+        a = testing.shaped_random((2, 3, 3), xp)
+        return self.argsort(a, axis=-4)
+
     # Misc tests
 
     def test_argsort_original_array_not_modified_one_dim(self):
