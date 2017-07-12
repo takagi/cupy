@@ -118,7 +118,7 @@ void cupy::thrust::_argsort(size_t *idx_start, void *data_start, const std::vect
     ptrdiff_t size;
     device_ptr<T> dp_data_first, dp_data_last;
     device_ptr<size_t> dp_idx_first, dp_idx_last;
-    device_vector<T> d_vals0, d_vals;
+    device_vector<T> d_vals;
 
     // Compute the total size of the data array.
     size = shape[0];
@@ -129,7 +129,7 @@ void cupy::thrust::_argsort(size_t *idx_start, void *data_start, const std::vect
     // Make a data vector from the data pointer.
     dp_data_first = device_pointer_cast(static_cast<T*>(data_start));
     dp_data_last  = device_pointer_cast(static_cast<T*>(data_start) + size);
-    d_vals0(dp_data_first, dp_data_last);
+    device_vector<T> d_vals0(dp_data_first, dp_data_last);
 
     // Make an index sequence.
     dp_idx_first = device_pointer_cast(static_cast<size_t*>(idx_start));
