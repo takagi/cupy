@@ -136,12 +136,12 @@ class TestArgsort(unittest.TestCase):
 
     _multiprocess_can_split_ = True
 
-    def argsort(self, a):
+    def argsort(self, a, axis=-1):
         if self.external:
             xp = cupy.get_array_module(a)
-            return xp.argsort(a)
+            return xp.argsort(a, axis=axis)
         else:
-            return a.argsort()
+            return a.argsort(axis=axis)
 
     # Test base cases
 
