@@ -744,7 +744,7 @@ cdef class ndarray:
 
         thrust.sort(self.dtype, self.data.ptr, self._shape)
 
-    def argsort(self):
+    def argsort(self, axis=-1):
         """Return the indices that would sort an array with stable sorting
 
         .. note::
@@ -759,27 +759,36 @@ cdef class ndarray:
 
         """
 
-        # TODO(takagi): Support axis argument.
         # TODO(takagi): Support kind argument.
+
+        cdef Py_ssize_t ndim = self.ndim
 
         if not cupy.cuda.thrust_enabled:
             raise RuntimeError('Thrust is needed to use cupy.argsort. Please '
                                'install CUDA Toolkit with Thrust then '
                                'reinstall CuPy after uninstalling it.')
 
-        if self.ndim == 0:
+        if ndim == 0:
             raise ValueError('Sorting arrays with the rank of zero is not '
                              'supported')  # as numpy.argsort() raises
 
-        data = cupy.ascontiguousarray(self)
+        if axis < 0:
+            axis += ndim
+        if not (0 <= axis < ndim):
+            raise ValueError('Axis out of range')
 
-
-        idx_array = ndarray(self.shape, dtype=numpy.intp)
-
-        thrust.argsort(
-            self.dtype, idx_array.data.ptr, data.data.ptr, self._shape)
-
-        return idx_array
+        if axis = ndim - 1:
+            data = cupy.ascontiguousarray(self)
+            idx_array = ndarray(data.shape, dtype=numpy.intp)
+            thrust.argsort(
+                self.dtype, idx_array.data.ptr, data.data.ptr, data._shape)
+            return idx_array
+        else:
+            data = cupy.ascontiguousarray(cupy.rollaxis(self, axis, ndim))
+            idx_array = ndarray(data.shape, dtype=numpy.intp)
+            thrust.argsort(
+                self.dtype, idx_array.data.ptr, data.data.ptr, data._shape)
+            return cupy.ascontiguousarray(cupy.rollaxis(idx_array, -1, axis))
 
     # TODO(okuta): Implement partition
     # TODO(okuta): Implement argpartition
