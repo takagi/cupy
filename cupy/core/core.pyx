@@ -772,22 +772,28 @@ cdef class ndarray:
             raise ValueError('Sorting arrays with the rank of zero is not '
                              'supported')  # as numpy.argsort() raises
 
+        if axis is None:
+            data = self.flatten()
+            axis = -1
+        else:
+            data = self
+
         if axis < 0:
             axis += ndim
         if not (0 <= axis < ndim):
             raise ValueError('Axis out of range')
 
         if axis == ndim - 1:
-            data = cupy.ascontiguousarray(self)
+            data = cupy.ascontiguousarray(data)
             idx_array = ndarray(data.shape, dtype=numpy.intp)
             thrust.argsort(
-                self.dtype, idx_array.data.ptr, data.data.ptr, data._shape)
+                data.dtype, idx_array.data.ptr, data.data.ptr, data._shape)
             return idx_array
         else:
-            data = cupy.ascontiguousarray(cupy.rollaxis(self, axis, ndim))
+            data = cupy.ascontiguousarray(cupy.rollaxis(data, axis, ndim))
             idx_array = ndarray(data.shape, dtype=numpy.intp)
             thrust.argsort(
-                self.dtype, idx_array.data.ptr, data.data.ptr, data._shape)
+                data.dtype, idx_array.data.ptr, data.data.ptr, data._shape)
             return cupy.ascontiguousarray(cupy.rollaxis(idx_array, -1, axis))
 
     # TODO(okuta): Implement partition
