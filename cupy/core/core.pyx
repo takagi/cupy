@@ -777,7 +777,7 @@ cdef class ndarray:
         if not (0 <= axis < ndim):
             raise ValueError('Axis out of range')
 
-        if axis = ndim - 1:
+        if axis == ndim - 1:
             data = cupy.ascontiguousarray(self)
             idx_array = ndarray(data.shape, dtype=numpy.intp)
             thrust.argsort(
