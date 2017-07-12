@@ -16,7 +16,8 @@ from cupy.cuda cimport common
 cdef extern from "../cuda/cupy_thrust.h" namespace "cupy::thrust":
     void _sort[T](void *start, const vector.vector[ptrdiff_t]&)
     void _lexsort[T](size_t *idx_start, void *keys_start, size_t k, size_t n)
-    void _argsort[T](size_t *idx_start, void *data_start, const vector.vector[ptrdiff_t]& shape)
+    void _argsort[T](size_t *idx_start, void *data_start,
+                     const vector.vector[ptrdiff_t]& shape)
 
 
 ###############################################################################
@@ -85,7 +86,8 @@ cpdef lexsort(dtype, size_t idx_start, size_t keys_start, size_t k, size_t n):
                         'supported'.format(dtype))
 
 
-cpdef argsort(dtype, size_t idx_start, size_t data_start, vector.vector[ptrdiff_t]& shape):
+cpdef argsort(dtype, size_t idx_start, size_t data_start,
+              vector.vector[ptrdiff_t]& shape):
 
     cdef size_t *_idx_start
     cdef void *_data_start
