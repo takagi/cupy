@@ -134,7 +134,11 @@ void cupy::thrust::_argsort(size_t *idx_start, void *data_start, const std::vect
     // Make an index sequence.
     dp_idx_first = device_pointer_cast(static_cast<size_t*>(idx_start));
     dp_idx_last  = device_pointer_cast(static_cast<size_t*>(idx_start) + size);
-    sequence(dp_idx_first, dp_idx_last);
+    transform(make_counting_iterator<size_t>(0),
+              make_counting_iterator<size_t>(size),
+              make_constant_iterator<ptrdiff_t>(shape[ndim-1]),
+              dp_idx_first,
+              modulus<size_t>());
 
     if (ndim == 1) {
         // Sort the index sequence by the data vector.
