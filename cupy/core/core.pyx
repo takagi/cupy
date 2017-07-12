@@ -771,11 +771,6 @@ cdef class ndarray:
             raise ValueError('Sorting arrays with the rank of zero is not '
                              'supported')  # as numpy.argsort() raises
 
-        # TODO(takagi): Support ranks of two or more
-        if self.ndim > 1:
-            raise NotImplementedError('Sorting arrays with the rank of two or '
-                                      'more is not supported')
-
         data = cupy.ascontiguousarray(self)
 
         # Assuming that Py_ssize_t can be represented with numpy.int64.
@@ -784,7 +779,7 @@ cdef class ndarray:
         idx_array = ndarray(self.shape, dtype=numpy.int64)
 
         thrust.argsort(
-            self.dtype, idx_array.data.ptr, data.data.ptr, self._shape[0])
+            self.dtype, idx_array.data.ptr, data.data.ptr, self._shape)
 
         return idx_array
 
