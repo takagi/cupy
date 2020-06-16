@@ -12,6 +12,9 @@ cdef class PinnedMemoryPointer:
     cpdef size_t size(self)
 
 
+cpdef _check_and_release()
+
+
 cpdef _add_to_watch_list(event, obj)
 
 
