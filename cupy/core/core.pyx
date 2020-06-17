@@ -2132,20 +2132,40 @@ cdef ndarray _send_object_to_gpu(obj, dtype, order, Py_ssize_t ndmin):
     cdef Py_ssize_t nbytes = a.nbytes
 
     stream = stream_module.get_current_stream()
-    cdef pinned_memory.PinnedMemoryPointer mem = (
-        _alloc_async_transfer_buffer(nbytes))
-    if mem is not None:
+
+    cdef pinned_memory.PinnedMemoryPointer mem
+    cdef size_t ptr
+    if _foo_impl == 'staging_memory':
+        mem = _alloc_async_transfer_buffer(nbytes)
+        assert mem is not None
         src_cpu = numpy.frombuffer(mem, a_dtype, a_cpu.size)
         src_cpu[:] = a_cpu.ravel(order)
         a.data.copy_from_host_async(ctypes.c_void_p(mem.ptr), nbytes)
         pinned_memory._add_to_watch_list(stream.record(), mem)
-    else:
+    elif _foo_impl == 'cudaHostRegister':
+        ptr = a_cpu.__array_interface__['data'][0]
+        pinned_memory._check_and_release()
+        runtime.hostRegister(ptr, nbytes, 0)
+        a.data.copy_from_host_async(ctypes.c_void_p(ptr), nbytes)
+        pinned_memory._add_to_watch_list(
+            stream.record(), _HostUnregisterer(ptr))
+    elif _foo_impl == 'sync':
         a.data.copy_from_host(
             ctypes.c_void_p(a_cpu.__array_interface__['data'][0]),
             nbytes)
+    else:
+        assert False
 
     return a
 
+class _HostUnregisterer:
+    def __init__(self, ptr):
+        self.ptr = ptr
+
+    def __del__(self):
+        runtime.hostUnregister(self.ptr)
+
+_foo_impl = 'staging_memory'
 
 cdef ndarray _send_numpy_array_list_to_gpu(
         list arrays, src_dtype, dst_dtype,

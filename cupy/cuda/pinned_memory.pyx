@@ -186,6 +186,10 @@ cdef object _current_allocator = _malloc
 cdef _EventWatcher _watcher = _EventWatcher()
 
 
+cpdef _check_and_release():
+    _watcher.check_and_release()
+
+
 cpdef _add_to_watch_list(event, obj):
     """ Add event to be monitored.
 
