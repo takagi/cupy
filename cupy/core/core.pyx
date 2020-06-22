@@ -2148,7 +2148,7 @@ cdef ndarray _send_object_to_gpu(obj, dtype, order, Py_ssize_t ndmin):
         runtime.hostRegister(ptr, nbytes, 0)
         a.data.copy_from_host_async(ctypes.c_void_p(ptr), nbytes)
         pinned_memory._add_to_watch_list(
-            stream.record(), _HostUnregisterer(ptr))
+            stream.record(), _HostUnregisterer(a_cpu, ptr))
     elif _foo_impl == 'sync':
         a.data.copy_from_host(
             ctypes.c_void_p(a_cpu.__array_interface__['data'][0]),
@@ -2159,7 +2159,8 @@ cdef ndarray _send_object_to_gpu(obj, dtype, order, Py_ssize_t ndmin):
     return a
 
 class _HostUnregisterer:
-    def __init__(self, ptr):
+    def __init__(self, src, ptr):
+        self.src = src  # keep reference to NumPy array until memcpy finishes
         self.ptr = ptr
 
     def __del__(self):
