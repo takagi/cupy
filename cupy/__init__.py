@@ -53,7 +53,6 @@ __version__ = _version.__version__
 
 
 import cupy.core.fusion  # NOQA
-from cupy import fft  # NOQA
 from cupy import functional  # NOQA
 from cupy import indexing  # NOQA
 from cupy import io  # NOQA

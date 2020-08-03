@@ -1,3 +1,7 @@
+# -----------------------------------------------------------------------------
+# Discrete Fourier Transform
+# -----------------------------------------------------------------------------
+
 from cupy.fft.fft import fft  # NOQA
 from cupy.fft.fft import fft2  # NOQA
 from cupy.fft.fft import fftfreq  # NOQA
