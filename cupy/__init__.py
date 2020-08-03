@@ -1,27 +1,28 @@
-import functools
-import sys
-import warnings
+import functools as _functools
+import sys as _sys
+import warnings as _warnings
 
-import numpy
+import numpy as _numpy
 
 from cupy import _environment
 from cupy import _version
 
 
-if sys.platform.startswith('win32') and (3, 8) <= sys.version_info:  # NOQA
+if _sys.platform.startswith('win32') and (3, 8) <= _sys.version_info:  # NOQA
     _environment._setup_win32_dll_directory()  # NOQA
 
 
 try:
-    with warnings.catch_warnings():
-        warnings.filterwarnings('ignore', category=ImportWarning,
-                                message='can\'t resolve package from __spec__')
+    with _warnings.catch_warnings():
+        _warnings.filterwarnings(
+            'ignore', category=ImportWarning,
+            message='can\'t resolve package from __spec__')
         from cupy import core  # NOQA
 except ImportError as e:
     # core is a c-extension module.
     # When a user cannot import core, it represents that CuPy is not correctly
     # built.
-    exc_info = sys.exc_info()
+    exc_info = _sys.exc_info()
     msg = ('''\
 CuPy is not correctly installed.
 
@@ -40,36 +41,20 @@ original error: {}'''.format(exc_info[1]))  # NOQA
     raise ImportError(msg) from e
 
 
-from cupy import cuda
+from cupy import cuda as _cuda
 # Do not make `cupy.cupyx` available because it is confusing.
 import cupyx as _cupyx
 
 
 def is_available():
-    return cuda.is_available()
+    return _cuda.is_available()
 
 
 __version__ = _version.__version__
 
 
-from cupy import binary  # NOQA
-import cupy.core.fusion  # NOQA
-from cupy import creation  # NOQA
-from cupy import fft  # NOQA
-from cupy import functional  # NOQA
-from cupy import indexing  # NOQA
-from cupy import io  # NOQA
-from cupy import linalg  # NOQA
-from cupy import manipulation  # NOQA
-from cupy import padding  # NOQA
-from cupy import polynomial  # NOQA
-from cupy import random  # NOQA
-from cupy import _sorting  # NOQA
-from cupy import sparse  # NOQA
-from cupy import statistics  # NOQA
-from cupy import testing  # NOQA  # NOQA
-from cupy import util  # NOQA
-from cupy import lib  # NOQA
+import cupy.core.fusion  as _fusion
+import cupy.core.new_fusion  as _new_fusion
 
 
 # import class and function
@@ -359,7 +344,7 @@ def binary_repr(num, width=None):
 
     .. seealso:: :func:`numpy.binary_repr`
     """
-    return numpy.binary_repr(num, width)
+    return _numpy.binary_repr(num, width)
 
 
 # -----------------------------------------------------------------------------
@@ -373,7 +358,7 @@ def can_cast(from_, to, casting='safe'):
     .. seealso:: :func:`numpy.can_cast`
     """
     from_ = from_.dtype if isinstance(from_, cupy.ndarray) else from_
-    return numpy.can_cast(from_, to, casting=casting)
+    return _numpy.can_cast(from_, to, casting=casting)
 
 
 def common_type(*arrays):
@@ -382,9 +367,9 @@ def common_type(*arrays):
     .. seealso:: :func:`numpy.common_type`
     """
     if len(arrays) == 0:
-        return numpy.float16
+        return _numpy.float16
 
-    default_float_dtype = numpy.dtype('float64')
+    default_float_dtype = _numpy.dtype('float64')
     dtypes = []
     for a in arrays:
         if a.dtype.kind == 'b':
@@ -394,7 +379,7 @@ def common_type(*arrays):
         else:
             dtypes.append(a.dtype)
 
-    return functools.reduce(numpy.promote_types, dtypes).type
+    return _functools.reduce(_numpy.promote_types, dtypes).type
 
 
 def result_type(*arrays_and_dtypes):
@@ -405,7 +390,7 @@ def result_type(*arrays_and_dtypes):
     """
     dtypes = [a.dtype if isinstance(a, cupy.ndarray)
               else a for a in arrays_and_dtypes]
-    return numpy.result_type(*dtypes)
+    return _numpy.result_type(*dtypes)
 
 
 from numpy import min_scalar_type  # NOQA
@@ -483,7 +468,7 @@ def base_repr(number, base=2, padding=0):  # NOQA (needed to avoid redefinition 
 
     .. seealso:: :func:`numpy.base_repr`
     """
-    return numpy.base_repr(number, base, padding)
+    return _numpy.base_repr(number, base, padding)
 
 
 # -----------------------------------------------------------------------------
@@ -531,7 +516,7 @@ def isscalar(element):
 
     .. seealso:: :func:`numpy.isscalar`
     """
-    return numpy.isscalar(element)
+    return _numpy.isscalar(element)
 
 
 from cupy.logic.ops import logical_and  # NOQA
@@ -669,7 +654,7 @@ from cupy.misc import who  # NOQA
 # -----------------------------------------------------------------------------
 # Padding
 # -----------------------------------------------------------------------------
-pad = padding.pad.pad
+from cupy.padding.pad import pad
 
 
 # -----------------------------------------------------------------------------
@@ -767,10 +752,10 @@ def asnumpy(a, stream=None, order='C'):
     if isinstance(a, ndarray):
         return a.get(stream=stream, order=order)
     else:
-        return numpy.asarray(a, order=order)
+        return _numpy.asarray(a, order=order)
 
 
-_cupy = sys.modules[__name__]
+_cupy = _sys.modules[__name__]
 
 
 def get_array_module(*args):
@@ -798,23 +783,23 @@ def get_array_module(*args):
     """
     for arg in args:
         if isinstance(arg, (ndarray, sparse.spmatrix,
-                            cupy.core.fusion._FusionVarArray,
-                            cupy.core.new_fusion._ArrayProxy)):
+                            _fusion._FusionVarArray,
+                            _new_fusion._ArrayProxy)):
             return _cupy
-    return numpy
+    return _numpy
 
 
-fuse = cupy.core.fusion.fuse
+fuse = _fusion.fuse
 
 disable_experimental_feature_warning = False
 
 
 # set default allocator
-_default_memory_pool = cuda.MemoryPool()
-_default_pinned_memory_pool = cuda.PinnedMemoryPool()
+_default_memory_pool = _cuda.MemoryPool()
+_default_pinned_memory_pool = _cuda.PinnedMemoryPool()
 
-cuda.set_allocator(_default_memory_pool.malloc)
-cuda.set_pinned_memory_allocator(_default_pinned_memory_pool.malloc)
+_cuda.set_allocator(_default_memory_pool.malloc)
+_cuda.set_pinned_memory_allocator(_default_pinned_memory_pool.malloc)
 
 
 def get_default_memory_pool():
@@ -849,5 +834,5 @@ def get_default_pinned_memory_pool():
 
 def show_config():
     """Prints the current runtime configuration to standard output."""
-    sys.stdout.write(str(_cupyx.get_runtime_info()))
-    sys.stdout.flush()
+    _sys.stdout.write(str(_cupyx.get_runtime_info()))
+    _sys.stdout.flush()
