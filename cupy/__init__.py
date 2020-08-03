@@ -64,7 +64,6 @@ from cupy import manipulation  # NOQA
 from cupy import padding  # NOQA
 from cupy import polynomial  # NOQA
 from cupy import random  # NOQA
-from cupy import _sorting  # NOQA
 from cupy import sparse  # NOQA
 from cupy import statistics  # NOQA
 from cupy import testing  # NOQA  # NOQA
@@ -691,9 +690,9 @@ from cupy._sorting.sort import argpartition  # NOQA
 from cupy._sorting.sort import argsort  # NOQA
 from cupy._sorting.sort import lexsort  # NOQA
 from cupy._sorting.sort import msort  # NOQA
-from cupy._sorting.sort import sort_complex  # NOQA
 from cupy._sorting.sort import partition  # NOQA
 from cupy._sorting.sort import sort  # NOQA
+from cupy._sorting.sort import sort_complex  # NOQA
 
 # -----------------------------------------------------------------------------
 # Statistics
