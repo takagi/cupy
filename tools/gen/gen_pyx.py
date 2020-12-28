@@ -63,16 +63,16 @@ def transpile_aux_struct_decl(env, directive, node, removed):
 
     assert isinstance(node.type, c_ast.FuncDecl)
 
-    out_type, out_args = gen.directive_multi_out(directive)
+    out_names, out_class = gen.directive_multi_out(directive)
     code = []
 
     if removed:
         code.append('# REMOVED')
 
-    code.append('cdef class {}:'.format(out_type))
+    code.append('cdef class {}:'.format(out_class))
     code.append('')
 
-    params = [p for p in node.type.args.params if p.name in out_args]
+    params = [p for p in node.type.args.params if p.name in out_names]
     args = [argaux(env, p) for p in params]
     code.append('    def __init__(self, {}):'.format(', '.join(args)))
 
@@ -99,12 +99,14 @@ def transpile_aux_struct(env, directive):
         return None
     elif gen.is_function_directive(directive):
         if gen.is_directive_multi_out(directive):
-            head = gen.directive_head(directive)
-            decls, removed = gen.query_func_decls(head, env)
-            assert len(decls) == 1  # assuming not type generic
-            return transpile_aux_struct_decl(env, directive, decls[0], removed)
-        else:
-            return None
+            _, out_class = gen.directive_multi_out(directive)
+            if out_class is not None:
+                head = gen.directive_head(directive)
+                decls, removed = gen.query_func_decls(head, env)
+                assert len(decls) == 1  # assuming not type generic
+                return transpile_aux_struct_decl(
+                    env, directive, decls[0], removed)
+        return None
     else:
         assert False
 
@@ -158,13 +160,16 @@ def transpile_wrapper_def(env, directive, node, pass_stream):
         return '{} {}({}) {}'.format(ret_type, name, ', '.join(args), excpt)
     elif gen.is_directive_multi_out(directive):
         assert gen.directive_except(directive) is None
-        out_type, out_args = gen.directive_multi_out(directive)
+        out_names, out_class = gen.directive_multi_out(directive)
         outs, params1 = gen.partition(
-            lambda p: p.name in out_args, params)
+            lambda p: p.name in out_names, params)
         assert len(outs) > 1
         name = gen.transpile_func_name(env, directive, node)
         args = [argaux(env, p) for p in params1]
-        return '{} {}({})'.format(out_type, name, ', '.join(args))
+        if out_class is None:
+            return '{}({})'.format(name, ', '.join(args))
+        else:
+            return '{} {}({})'.format(out_class, name, ', '.join(args))
     else:
         assert False
 
@@ -177,8 +182,8 @@ def transpile_wrapper_call(env, directive, node):
                 name1 = gen.deref_var_name(name)
                 return '&{}'.format(name1)
         if gen.is_directive_multi_out(directive):
-            _, out_args = gen.directive_multi_out(directive)
-            if name in out_args:
+            out_names, _ = gen.directive_multi_out(directive)
+            if name in out_names:
                 name1 = gen.deref_var_name(name)
                 return '&{}'.format(name1)
         erased_type = gen.erased_type_name(env, node.type)
@@ -241,15 +246,15 @@ def transpile_wrapper_decl(env, directive, node, removed):
         out_name1 = gen.deref_var_name(out_name)
         code.append('    cdef {} {}'.format(out_type, out_name1))
     elif gen.is_directive_multi_out(directive):
-        _, out_args = gen.directive_multi_out(directive)
+        out_names, _ = gen.directive_multi_out(directive)
         outs, params = gen.partition(
-            lambda p: p.name in out_args, node.type.args.params)
+            lambda p: p.name in out_names, node.type.args.params)
         assert len(outs) > 1
-        for out, out_arg in zip(outs, out_args):
+        for out, out_name in zip(outs, out_names):
             # dereference out
-            out_arg_type = gen.transpile_type_name(env, out.type.type)
-            out_arg1 = gen.deref_var_name(out_arg)
-            code.append('    cdef {} {}'.format(out_arg_type, out_arg1))
+            out_type = gen.transpile_type_name(env, out.type.type)
+            out_name1 = gen.deref_var_name(out_name)
+            code.append('    cdef {} {}'.format(out_type, out_name1))
     else:
         assert False
 
@@ -295,22 +300,26 @@ def transpile_wrapper_decl(env, directive, node, removed):
         else:
             code.append('    return {}'.format(out_name1))
     elif gen.is_directive_multi_out(directive):
-        out_type, out_args = gen.directive_multi_out(directive)
+        out_names, out_class = gen.directive_multi_out(directive)
         outs, params = gen.partition(
-            lambda p: p.name in out_args, node.type.args.params)
+            lambda p: p.name in out_names, node.type.args.params)
         assert len(outs) > 1
-        out_args1 = []
-        for out_arg, out in zip(out_args, outs):
+        out_names1 = []
+        for out_name, out in zip(out_names, outs):
             # dereference out
-            out_arg_name = gen.deref_var_name(out_arg)
+            out_name1 = gen.deref_var_name(out_name)
             if isinstance(out.type.type, c_ast.TypeDecl):
-                out_args1.append(out_arg_name)
+                out_names1.append(out_name1)
             elif isinstance(out.type.type, c_ast.PtrDecl):
-                out_arg_type = gen.erased_type_name(env, out.type.type)
-                out_args1.append('<{}>{}'.format(out_arg_type, out_arg_name))
+                out_type = gen.erased_type_name(env, out.type.type)
+                out_names1.append('<{}>{}'.format(out_type, out_name1))
             else:
                 assert False
-        code.append('    return {}({})'.format(out_type, ', '.join(out_args1)))
+        if out_class is None:
+            code.append('    return {}'.format(', '.join(out_names1)))
+        else:
+            code.append(
+                '    return {}({})'.format(out_class, ', '.join(out_names1)))
     else:
         assert False
 

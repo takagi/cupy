@@ -146,9 +146,11 @@ def is_directive_multi_out(directive):
     out_spec = directive[1]['out']
     if not isinstance(out_spec, tuple):
         return False
-    assert len(out_spec) == 2
-    assert isinstance(out_spec[0], str)
-    assert isinstance(out_spec[1], tuple)
+    if len(out_spec) == 2 and isinstance(out_spec[1], tuple):
+        assert isinstance(out[0], str)
+        assert all(isinstance(x, str) for x in out_spec[1])
+    else:
+        assert all(isinstance(x, str) for x in out_spec)
     return True
 
 
@@ -159,7 +161,11 @@ def directive_single_out(directive):
 
 def directive_multi_out(directive):
     assert is_directive_multi_out(directive)
-    return directive[1]['out']
+    out = directive[1]['out']
+    if len(out) == 2 and isinstance(out[1], tuple):
+        return out[1], out[0]
+    else:
+        return out, None
 
 
 def directive_use_stream(directive):
