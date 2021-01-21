@@ -28,6 +28,15 @@ def maybe(fn):
     return lambda x: fn(x) if x is not None else None
 
 
+def join_or_none(sep, x):
+    if x is None:
+        return None
+    x = list(compact(x))
+    if x == []:
+        return None
+    return sep.join(x)
+
+
 # Directive
 
 def read_directives(path):
